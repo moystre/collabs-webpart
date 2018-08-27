@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "collaborators-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/collaborators/CollaboratorsWebPart.js",
+          "manifest": "./src/webparts/collaborators/CollaboratorsWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "CollaboratorsWebPartStrings": "lib/webparts/collaborators/loc/{locale}.js"
+  }
+}

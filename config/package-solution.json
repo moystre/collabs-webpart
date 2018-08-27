@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "collabs-webpart-client-side-solution",
+    "id": "67df2129-2085-4d29-9494-971120520680",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true
+  },
+  "paths": {
+    "zippedPackage": "solution/collabs-webpart.sppkg"
+  }
+}

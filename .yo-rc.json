@@ -1,0 +1,11 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "isCreatingSolution": true,
+    "environment": "spo",
+    "version": "1.5.1",
+    "libraryName": "collabs-webpart",
+    "libraryId": "67df2129-2085-4d29-9494-971120520680",
+    "packageManager": "npm",
+    "componentType": "webpart"
+  }
+}
