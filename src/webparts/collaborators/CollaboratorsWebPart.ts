@@ -15,6 +15,18 @@ import * as strings from 'CollaboratorsWebPartStrings';
 import Collaborators from './components/Collaborators';
 import { ICollaboratorsProps } from './components/ICollaboratorsProps';
 
+import { TextField } from 'office-ui-fabric-react/lib/TextField';
+import {
+  DetailsList,
+  DetailsListLayoutMode,
+  Selection,
+  IColumn,
+  IDetailsList
+} from 'office-ui-fabric-react/lib/DetailsList';
+import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
+import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
+import { createRef } from 'office-ui-fabric-react/lib/Utilities';
+
 import {
   Environment,
   EnvironmentType
@@ -23,6 +35,7 @@ import {
 export interface ICollaboratorsWebPartProps {
   description: string;
 }
+
 export interface ISPLists {
   value: ISPList[];
 }
@@ -30,14 +43,40 @@ export interface ISPLists {
 export interface ISPList {
   Title: string;
   Id: string;
+  wpEmail: string;
+  wpPhone: string;
 }
 
 export default class CollaboratorsWebPart extends BaseClientSideWebPart<ICollaboratorsWebPartProps> {
-  private _getListData(): Promise<ISPLists> {
-    return this.context.spHttpClient.get(this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=Hidden eq false`, SPHttpClient.configurations.v1)
-      .then((response: SPHttpClientResponse) => {
-        return response.json();
-      });
+  public fetchedIsp: string[];
+  public columns: IColumn[];
+
+  constructor() {
+    super();
+    this.fetchedIsp = null;
+    this.columns = [
+      {
+        key: 'column1',
+        name: 'Title',
+        fieldName: 'title',
+        minWidth: 100,
+        maxWidth: 200,
+        isResizable: true,
+        ariaLabel: 'Operations for name'
+      },
+      {
+        key: 'wpEmail',
+        name: 'Email',
+        fieldName: 'wpEmail',
+        minWidth: 100,
+        maxWidth: 200,
+        isResizable: true,
+        ariaLabel: 'Operations for value'
+      }]
+  }
+
+  protected async onInit(): Promise<void> {
+    this.fetchedIsp = await this.getspLists();
   }
 
   public render(): void {
@@ -45,40 +84,55 @@ export default class CollaboratorsWebPart extends BaseClientSideWebPart<ICollabo
       Collaborators,
       {
         description: this.properties.description,
-        lists: ["1", "2", "1", "2", "1", "2", "1", "2"]
+        ispLists: this.fetchedIsp,
+        columns: this.columns
       }
     );
 
     ReactDom.render(element, this.domElement);
   }
 
-  public _renderList(items: ISPList[]): void {
-    let html: string = '';
-    items.forEach((item: ISPList) => {
-      html += `
-    <ul>
-      <li>
-        <span class="ms-font-l">${item.Title}</span>
-      </li>
-    </ul>`;
-    });
-
-    const listContainer: Element = this.domElement.querySelector('#spListContainer');
-    listContainer.innerHTML = html;
+  private async getspLists(): Promise<string[]> {
+    var renderedList: string[];
+    if (Environment.type === EnvironmentType.Local) {
+      console.log('Local environment');
+      return null;
+    }
+    else if (Environment.type == EnvironmentType.SharePoint ||
+      Environment.type == EnvironmentType.ClassicSharePoint) {
+      try {
+        let container = null;
+        var list: string[] = [];
+        container = await this._getListData();
+        container.value.forEach((item: ISPList) => {
+          console.log(item);
+          list.push(item.Title);
+        });
+        renderedList = list;
+      }
+      catch (exception) {
+        console.warn(exception);
+      }
+      return renderedList;
+    }
   }
 
-  public _renderListAsync(): void {
-    // Local environment
-    if (Environment.type === EnvironmentType.Local) {
-     console.log('// Local environment')
+  private _getListData = async (): Promise<ISPLists> => {
+    let returnLists: ISPLists = null;
+    try {
+      const response: SPHttpClientResponse = await this.context.spHttpClient.get(this.context.pageContext.web.absoluteUrl
+      /*  + `/_api/web/lists?$filter=Hidden eq false`, */
+        + `/_api/web/lists/GetByTitle('Collaborators')/items`,  
+        SPHttpClient.configurations.v1);
+      if (!response.ok) {
+        throw "Could not fetch list data";
+      }
+      const lists: ISPLists = await response.json();
+      returnLists = lists;
+    } catch (exception) {
+      console.warn(exception);
     }
-    else if (Environment.type == EnvironmentType.SharePoint || 
-              Environment.type == EnvironmentType.ClassicSharePoint) {
-      this._getListData()
-        .then((response) => {
-          this._renderList(response.value);
-        });
-    }
+    return returnLists;
   }
 
   protected onDispose(): void {
